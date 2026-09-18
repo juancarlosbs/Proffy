@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #f0f0f7;
+  --color-primary-lighter: #9871f5;
+  --color-primary-light: #916bea;
+  --color-primary: #8257e5;
+  --color-primary-dark: #774dd6;
+  --color-primary-darker: #6842c2;
+  --color-secondary: #04d361;
+  --color-secondary-dark: #04bf58;
+  --color-title-in-primary: #ffffff;
+  --color-text-in-primary: #d4c2ff;
+  --color-text-title: #32264d;
+  --color-text-complement: #9c98a6;
+  --color-text-base: #6a6180;
+  --color-line-in-white: #e6e6f0;
+  --color-input-background: #f8f8fc;
+  --color-button-text: #ffffff;
+  --color-box-base: #ffffff;
+  --color-box-footer: #fafafc;
+
+  --font-poppins: var(--font-poppins-google);
+  --font-archivo: var(--font-archivo-google);
+}
+
+html {
+  font-size: 60%;
+}
+
+@media (min-width: 700px) {
+  html {
+    font-size: 62.5%;
+  }
+}
+
+body {
+  background: var(--color-background);
+  font-family: var(--font-poppins-google), sans-serif;
+  font-weight: 500;
+  font-size: 1.6rem;
+}
+
+.landing-grid {
+  grid-template-areas: "logo hero hero" "buttons buttons total";
+}
+
+.landing-logo {
+  grid-area: logo;
+}
+
+.landing-hero {
+  grid-area: hero;
+}
+
+.landing-buttons {
+  grid-area: buttons;
+}
+
+.landing-total {
+  grid-area: total;
+}
