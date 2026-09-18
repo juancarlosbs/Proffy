@@ -22,23 +22,14 @@
 
   --font-poppins: var(--font-poppins-google);
   --font-archivo: var(--font-archivo-google);
-}
 
-html {
-  font-size: 60%;
-}
-
-@media (min-width: 700px) {
-  html {
-    font-size: 62.5%;
-  }
+  --breakpoint-lg1100: 1100px;
 }
 
 body {
   background: var(--color-background);
-  font-family: var(--font-poppins-google), sans-serif;
+  font-family: var(--font-poppins), sans-serif;
   font-weight: 500;
-  font-size: 1.6rem;
 }
 
 .landing-grid {
