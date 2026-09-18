@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+:root {
+  --color-background: #F0F0F7;
+  --color-primary-lighter: #9871F5;
+  --color-primary-light: #916BEA;
+  --color-primary: #8257E5;
+  --color-primary-dark: #774DD6;
+  --color-primary-darker: #6842C2;
+  --color-secundary: #04D361;
+  --color-secundary-dark: #04BF58;
+  --color-title-in-primary: #FFFFFF;
+  --color-text-in-primary: #D4C2FF;
+  --color-text-title: #32264D;
+  --color-text-complement: #9C98A6;
+  --color-text-base: #6A6180;
+  --color-line-in-white: #E6E6F0;
+  --color-input-background: #F8F8FC;
+  --color-button-text: #FFFFFF;
+  --color-box-base: #FFFFFF;
+  --color-box-footer: #FAFAFC;
+}
+
+@theme inline {
+  --color-background: var(--color-background);
+  --color-primary-lighter: var(--color-primary-lighter);
+  --color-primary-light: var(--color-primary-light);
+  --color-primary: var(--color-primary);
+  --color-primary-dark: var(--color-primary-dark);
+  --color-primary-darker: var(--color-primary-darker);
+  --color-secundary: var(--color-secundary);
+  --color-secundary-dark: var(--color-secundary-dark);
+  --color-title-in-primary: var(--color-title-in-primary);
+  --color-text-in-primary: var(--color-text-in-primary);
+  --color-text-title: var(--color-text-title);
+  --color-text-complement: var(--color-text-complement);
+  --color-text-base: var(--color-text-base);
+  --color-line-in-white: var(--color-line-in-white);
+  --color-input-background: var(--color-input-background);
+  --color-button-text: var(--color-button-text);
+  --color-box-base: var(--color-box-base);
+  --color-box-footer: var(--color-box-footer);
+
+  --font-poppins: var(--font-poppins);
+  --font-archivo: var(--font-archivo);
+
+  --breakpoint-lg1100: 1100px;
+}
+
+body {
+  background: var(--color-background);
+}
