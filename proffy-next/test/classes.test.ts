@@ -112,4 +112,52 @@ describe('POST /classes', () => {
         expect(classesTotal).toBe(1);
         expect(scheduleTotal).toBe(1);
     });
+
+    it('returns 400 (not 500) when required data is missing, and keeps the API usable afterwards', async () => {
+        const payloadWithoutName = { ...validClassPayload } as Partial<typeof validClassPayload>;
+        delete payloadWithoutName.name;
+
+        const res = await POST(postRequest(payloadWithoutName));
+
+        expect(res.status).toBe(400);
+
+        const [{ total: usersTotal }] = await db('users').count('* as total');
+        const [{ total: classesTotal }] = await db('classes').count('* as total');
+        expect(usersTotal).toBe(0);
+        expect(classesTotal).toBe(0);
+
+        const followUpRes = await POST(postRequest(validClassPayload));
+        expect(followUpRes.status).toBe(201);
+    });
+
+    it('returns a clear 400 error when the request body is not valid JSON', async () => {
+        const req = new NextRequest('http://localhost/classes', {
+            method: 'POST',
+            body: '{not valid json',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        const res = await POST(req);
+
+        expect(res.status).toBe(400);
+        const body = await res.json();
+        expect(body).toHaveProperty('error');
+    });
+
+    it('stores the schedule linked to the class id, not the user id', async () => {
+        // Insert a class row directly (foreign keys are off in this schema) so that the
+        // next class created has a different id than the user created alongside it.
+        await db('classes').insert({ subject: 'Dummy', cost: 1, user_id: 1 });
+
+        const res = await POST(postRequest(validClassPayload));
+        expect(res.status).toBe(201);
+
+        const [user] = await db('users').orderBy('id', 'desc').limit(1);
+        const [createdClass] = await db('classes').where({ subject: 'Matemática' }).orderBy('id', 'desc').limit(1);
+
+        expect(createdClass.id).not.toBe(user.id);
+
+        const schedules = await db('class_schedule').where({ class_id: createdClass.id });
+        expect(schedules).toHaveLength(1);
+    });
 });

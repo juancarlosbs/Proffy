@@ -42,6 +42,17 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+    let body;
+
+    try {
+        body = await req.json();
+    } catch {
+        return NextResponse.json(
+            { error: 'Invalid JSON body' },
+            { status: 400 },
+        );
+    }
+
     const {
         name,
         avatar,
@@ -50,27 +61,27 @@ export async function POST(req: NextRequest) {
         subject,
         cost,
         schedule,
-    } = await req.json();
+    } = body;
 
     const trx = await db.transaction();
 
-    const insertedUsersIds = await trx('users').insert({
-        name,
-        avatar,
-        whatsapp,
-        bio,
-    });
-
-    const user_id = insertedUsersIds[0];
-
     try {
-        await trx('classes').insert({
+        const insertedUsersIds = await trx('users').insert({
+            name,
+            avatar,
+            whatsapp,
+            bio,
+        });
+
+        const user_id = insertedUsersIds[0];
+
+        const insertedClassesIds = await trx('classes').insert({
             subject,
             cost,
             user_id,
         });
 
-        const class_id = insertedUsersIds[0];
+        const class_id = insertedClassesIds[0];
 
         const classSchedule = schedule.map((scheduleItem: ScheduleItem) => {
             return {
