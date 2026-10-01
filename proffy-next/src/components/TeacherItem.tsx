@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 
 import whatsappIcon from "@/assets/images/icons/whatsapp.svg";
+import purpleHeartIcon from "@/assets/images/icons/purple-heart.svg";
+import { isFavorite, toggleFavorite } from "@/utils/favorites";
 
 export interface Teacher {
   id: number;
@@ -19,12 +22,18 @@ interface TeacherItemProps {
 }
 
 export default function TeacherItem({ teacher }: TeacherItemProps) {
+  const [favorite, setFavorite] = useState(() => isFavorite(teacher.id));
+
   function createNewConnection() {
     fetch("/connections", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: teacher.id }),
     });
+  }
+
+  function handleToggleFavorite() {
+    setFavorite(toggleFavorite(teacher));
   }
 
   return (
@@ -38,12 +47,29 @@ export default function TeacherItem({ teacher }: TeacherItemProps) {
           unoptimized
           className="h-20 w-20 rounded-full object-cover"
         />
-        <div className="ml-6">
+        <div className="ml-6 flex-1">
           <strong className="block font-archivo text-2xl font-bold text-text-title">
             {teacher.name}
           </strong>
           <span className="mt-1 block text-base">{teacher.subject}</span>
         </div>
+        <button
+          type="button"
+          onClick={handleToggleFavorite}
+          aria-label={
+            favorite
+              ? "Remover dos favoritos"
+              : "Adicionar aos favoritos"
+          }
+          aria-pressed={favorite}
+          className="h-8 w-8 shrink-0 transition-opacity hover:opacity-70"
+        >
+          <Image
+            src={purpleHeartIcon}
+            alt=""
+            className={favorite ? "opacity-100" : "opacity-30"}
+          />
+        </button>
       </header>
 
       <p className="px-8 text-base leading-7">{teacher.bio}</p>

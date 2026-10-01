@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 
 import PageHeader from "@/components/PageHeader";
 import TeacherItem, { Teacher } from "@/components/TeacherItem";
@@ -129,6 +130,15 @@ export default function Study() {
       </PageHeader>
 
       <main className="mx-auto my-8 w-[90%] lg1100:max-w-[740px] lg1100:py-8">
+        <div className="flex justify-end">
+          <Link
+            href="/favorites"
+            className="text-sm font-bold text-primary no-underline hover:text-primary-dark"
+          >
+            Ver meus favoritos
+          </Link>
+        </div>
+
         {teachers.map((teacher) => (
           <TeacherItem key={teacher.id} teacher={teacher} />
         ))}
