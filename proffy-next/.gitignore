@@ -13,6 +13,10 @@
 # testing
 /coverage
 
+# database
+/src/server/database/database.sqlite
+/src/server/database/*.test.sqlite
+
 # next.js
 /.next/
 /out/

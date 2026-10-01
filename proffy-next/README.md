@@ -1,14 +1,16 @@
 # Proffy Next
 
-Reescrita do frontend do [Proffy](../web) com tecnologias atuais. Este app convive lado a lado com `web/`, `server/` e `mobile/` — nenhum deles foi alterado.
+Reescrita do frontend **e da API** do [Proffy](../web) com tecnologias atuais. Este app convive lado a lado com `web/`, `server/` e `mobile/` — nenhum deles foi alterado. A API que antes vivia em `server/` (Express + Knex) foi migrada para cá como Route Handlers do App Router, mantendo o mesmo contrato HTTP e o mesmo schema de dados.
 
 ## Stack e versões
 
-- [Next.js](https://nextjs.org) `16.3.5` (App Router, Turbopack)
+- [Next.js](https://nextjs.org) `16.3.5` (App Router, Turbopack, Route Handlers)
 - [React](https://react.dev) `19.2.8`
 - [TypeScript](https://www.typescriptlang.org) `5.x`
 - [Tailwind CSS](https://tailwindcss.com) `4.x` (via `@tailwindcss/postcss`)
 - [ESLint](https://eslint.org) `9.x` com `eslint-config-next`
+- [Knex](https://knexjs.org) `3.x` + [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3) (acesso a dados/migrations da API, mesmo schema SQLite do `server/` original)
+- [Vitest](https://vitest.dev) para os testes de contrato da API
 - Fontes Google (`next/font/google`): **Poppins** e **Archivo**, as mesmas usadas no Proffy original
 
 ## Como rodar
@@ -18,20 +20,42 @@ Pré-requisitos: Node.js 20+ e npm.
 ```bash
 cd proffy-next
 npm install
+npm run db:migrate   # cria/atualiza o banco SQLite usado pela API (veja "Banco de dados")
 npm run dev
 ```
 
-Acesse [http://localhost:3000](http://localhost:3000).
+Acesse [http://localhost:3000](http://localhost:3000). As rotas da API ficam em `http://localhost:3000/classes` e `http://localhost:3000/connections`.
+
+## Banco de dados
+
+A API usa SQLite via Knex, com o mesmo schema (`users`, `classes`, `class_schedule`, `connections`) do `server/` original. O arquivo do banco fica em `src/server/database/database.sqlite` (gerado localmente, não é versionado) e as migrations ficam em `src/server/database/migrations/`.
+
+Para criar o banco pela primeira vez ou aplicar novas migrations:
+
+```bash
+npm run db:migrate
+```
+
+Para desfazer o último batch de migrations:
+
+```bash
+npm run db:migrate:rollback
+```
+
+O caminho do arquivo do banco pode ser customizado com a variável de ambiente `PROFFY_DB_FILE` (usada também pelos testes automatizados, para rodar contra um banco temporário isolado).
 
 ## Scripts
 
-| Script            | Descrição                                      |
-| ----------------- | ----------------------------------------------- |
-| `npm run dev`      | Sobe o servidor de desenvolvimento (Turbopack)  |
-| `npm run build`    | Gera o build de produção                        |
-| `npm run start`    | Serve o build de produção                       |
-| `npm run lint`     | Roda o ESLint                                   |
-| `npm run typecheck`| Roda o TypeScript em modo `--noEmit`            |
+| Script                        | Descrição                                                        |
+| ------------------------------ | ----------------------------------------------------------------- |
+| `npm run dev`                  | Sobe o servidor de desenvolvimento (Turbopack)                    |
+| `npm run build`                | Gera o build de produção                                          |
+| `npm run start`                | Serve o build de produção                                         |
+| `npm run lint`                 | Roda o ESLint                                                      |
+| `npm run typecheck`            | Roda o TypeScript em modo `--noEmit`                               |
+| `npm run db:migrate`           | Cria/atualiza o banco SQLite aplicando as migrations do Knex       |
+| `npm run db:migrate:rollback`  | Desfaz o último batch de migrations                                |
+| `npm test`                     | Roda os testes de contrato da API (Vitest)                        |
 
 ## Estrutura de pastas
 
@@ -40,17 +64,41 @@ proffy-next/
 ├── public/                      # arquivos estáticos servidos na raiz
 ├── src/
 │   ├── app/
+│   │   ├── classes/route.ts     # GET/POST /classes (migrado de server/)
+│   │   ├── connections/route.ts # GET/POST /connections (migrado de server/)
 │   │   ├── favicon.ico
 │   │   ├── layout.tsx           # layout raiz: fontes (Poppins/Archivo) e metadata
 │   │   ├── page.tsx             # página inicial (Landing)
 │   │   └── globals.css          # tema Tailwind (cores/tipografia do Proffy) + estilos globais
-│   └── assets/
-│       └── images/              # SVGs migrados de web/src/assets/images (logo, ilustrações, ícones)
+│   ├── assets/
+│   │   └── images/              # SVGs migrados de web/src/assets/images (logo, ilustrações, ícones)
+│   └── server/                  # código de acesso a dados da API (migrado de server/)
+│       ├── db.ts                # instância do Knex
+│       ├── utils/convertHourToMinutes.ts
+│       └── database/
+│           ├── database.sqlite  # gerado localmente por `npm run db:migrate` (não versionado)
+│           └── migrations/      # migrations do Knex (schema users/classes/class_schedule/connections)
+├── test/                        # testes de contrato da API (Vitest)
+├── knexfile.ts                  # config do Knex CLI (`npm run db:migrate`)
+├── vitest.config.ts
 ├── next.config.ts
 ├── tsconfig.json
 ├── eslint.config.mjs
 └── package.json
 ```
+
+## API (migrada de `server/`)
+
+As rotas abaixo substituem a antiga API Express de `server/`, mantendo o mesmo contrato HTTP (parâmetros, status codes e formato de resposta) e o mesmo schema de dados:
+
+| Rota                | Método | Descrição                                                                 |
+| -------------------- | ------ | --------------------------------------------------------------------------- |
+| `/classes`       | GET    | Lista aulas filtrando por `subject`, `week_day` e `time` (query params). Retorna `400` se algum filtro faltar. |
+| `/classes`       | POST   | Cria um professor, sua aula e os horários (`schedule`). Retorna `201` sem corpo. |
+| `/connections`   | GET    | Retorna `{ total }` com o total de conexões registradas.                   |
+| `/connections`   | POST   | Registra uma nova conexão a partir de `user_id`. Retorna `201` sem corpo.   |
+
+O acesso a dados usa Knex + `better-sqlite3` (ver [Banco de dados](#banco-de-dados)) em vez do `sqlite3` + Knex `0.21` usados no `server/` original.
 
 ## Sobre a página inicial
 
