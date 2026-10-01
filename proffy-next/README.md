@@ -25,13 +25,49 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 ## Scripts
 
-| Script            | Descrição                                      |
-| ----------------- | ----------------------------------------------- |
-| `npm run dev`      | Sobe o servidor de desenvolvimento (Turbopack)  |
-| `npm run build`    | Gera o build de produção                        |
-| `npm run start`    | Serve o build de produção                       |
-| `npm run lint`     | Roda o ESLint                                   |
-| `npm run typecheck`| Roda o TypeScript em modo `--noEmit`            |
+| Script               | Descrição                                               |
+| -------------------- | -------------------------------------------------------- |
+| `npm run dev`         | Sobe o servidor de desenvolvimento (Turbopack)           |
+| `npm run build`       | Gera o build de produção                                 |
+| `npm run start`       | Serve o build de produção                                |
+| `npm run lint`        | Roda o ESLint                                             |
+| `npm run typecheck`   | Roda o TypeScript em modo `--noEmit`                      |
+| `npm test`            | Roda a suíte de testes de contrato da API (Vitest)        |
+| `npm run db:generate` | Gera migrations Drizzle a partir de `src/db/schema.ts`   |
+| `npm run db:migrate`  | Aplica as migrations Drizzle pendentes ao banco SQLite    |
+
+## API: `classes` e `connections`
+
+Além do frontend, `proffy-next/` expõe uma API própria via Route Handlers, migrada de `server/` (Express + Knex) para Drizzle ORM + SQLite:
+
+- `GET /classes?subject=&week_day=&time=` — lista aulas que atendem aos filtros (todos obrigatórios).
+- `POST /classes` — cria professor (`users`), aula (`classes`) e horários (`class_schedule`).
+- `GET /connections` — retorna o total de conexões feitas.
+- `POST /connections` — registra uma nova conexão (`user_id`).
+
+O schema (tabelas `users`, `classes`, `class_schedule`, `connections`) é definido em `src/db/schema.ts`, equivalente ao schema de `server/src/database/migrations`. `server/`, `web/` e `mobile/` não são afetados por essa API — ela é independente, incluindo seu próprio banco SQLite em `proffy-next/data/database.sqlite` (não versionado, nem compartilhado com `server/src/database/database.sqlite`).
+
+### Criando o banco do zero
+
+O banco de dados (`proffy-next/data/database.sqlite`) não é versionado e não é migrado a partir do banco existente em `server/`. Para criá-lo do zero:
+
+```bash
+cd proffy-next
+npm install
+npm run db:generate   # gera os arquivos SQL de migration em drizzle/migrations (já existe um commitado, rode só se mudar o schema)
+npm run db:migrate    # aplica as migrations e cria/atualiza data/database.sqlite
+```
+
+Isso cria as tabelas `users`, `classes`, `class_schedule` e `connections` vazias, prontas para uso.
+
+### Rodando os testes
+
+Os testes de contrato da API usam Vitest + supertest e rodam contra um banco SQLite em memória (migrations aplicadas automaticamente antes de cada suíte, sem depender de `data/database.sqlite`):
+
+```bash
+cd proffy-next
+npm test
+```
 
 ## Estrutura de pastas
 
