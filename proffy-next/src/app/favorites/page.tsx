@@ -1,0 +1,29 @@
+"use client";
+
+import { useState } from "react";
+
+import PageHeader from "@/components/PageHeader";
+import TeacherItem, { Teacher } from "@/components/TeacherItem";
+import { getFavorites } from "@/lib/favorites";
+
+export default function Favorites() {
+  const [favorites] = useState<Teacher[]>(() => getFavorites());
+
+  return (
+    <div className="h-screen w-screen">
+      <PageHeader title="Meus proffys favoritos" />
+
+      <main className="mx-auto my-8 w-[90%] lg1100:max-w-[740px] lg1100:py-8">
+        {favorites.length === 0 && (
+          <p className="mt-8 text-center text-base">
+            Você ainda não favoritou nenhum proffy.
+          </p>
+        )}
+
+        {favorites.map((teacher) => (
+          <TeacherItem key={teacher.id} teacher={teacher} />
+        ))}
+      </main>
+    </div>
+  );
+}

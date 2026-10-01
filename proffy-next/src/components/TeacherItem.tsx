@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 
 import whatsappIcon from "@/assets/images/icons/whatsapp.svg";
+import { isFavorite, toggleFavorite } from "@/lib/favorites";
 
 export interface Teacher {
   id: number;
@@ -19,12 +21,19 @@ interface TeacherItemProps {
 }
 
 export default function TeacherItem({ teacher }: TeacherItemProps) {
+  const [favorited, setFavorited] = useState(() => isFavorite(teacher.id));
+
   function createNewConnection() {
     fetch("/connections", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id: teacher.id }),
     });
+  }
+
+  function handleToggleFavorite() {
+    const nowFavorited = toggleFavorite(teacher);
+    setFavorited(nowFavorited);
   }
 
   return (
@@ -38,12 +47,28 @@ export default function TeacherItem({ teacher }: TeacherItemProps) {
           unoptimized
           className="h-20 w-20 rounded-full object-cover"
         />
-        <div className="ml-6">
+        <div className="ml-6 flex-1">
           <strong className="block font-archivo text-2xl font-bold text-text-title">
             {teacher.name}
           </strong>
           <span className="mt-1 block text-base">{teacher.subject}</span>
         </div>
+        <button
+          type="button"
+          onClick={handleToggleFavorite}
+          aria-label={
+            favorited ? "Remover dos favoritos" : "Adicionar aos favoritos"
+          }
+          aria-pressed={favorited}
+          className="ml-4 flex h-10 w-10 shrink-0 items-center justify-center text-2xl transition-colors"
+        >
+          <span
+            className={favorited ? "text-primary" : "text-line-in-white"}
+            aria-hidden
+          >
+            {favorited ? "♥" : "♡"}
+          </span>
+        </button>
       </header>
 
       <p className="px-8 text-base leading-7">{teacher.bio}</p>
