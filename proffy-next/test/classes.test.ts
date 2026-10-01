@@ -112,4 +112,65 @@ describe('POST /classes', () => {
         expect(classesTotal).toBe(1);
         expect(scheduleTotal).toBe(1);
     });
+
+    it('returns 400 when a required field is missing and does not block the pool', async () => {
+        const { name, ...incompletePayload } = validClassPayload;
+        void name;
+
+        const res = await POST(postRequest(incompletePayload));
+
+        expect(res.status).toBe(400);
+        const body = await res.json();
+        expect(body).toHaveProperty('error');
+        expect(typeof body.error).toBe('string');
+
+        const [{ total: usersTotal }] = await db('users').count('* as total');
+        expect(usersTotal).toBe(0);
+
+        const followUp = await POST(postRequest(validClassPayload));
+        expect(followUp.status).toBe(201);
+    });
+
+    it('returns 400 with "Invalid JSON body" for a malformed body', async () => {
+        const req = new NextRequest('http://localhost/classes', {
+            method: 'POST',
+            body: 'not-json{',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        const res = await POST(req);
+
+        expect(res.status).toBe(400);
+        const body = await res.json();
+        expect(body).toEqual({ error: 'Invalid JSON body' });
+    });
+
+    it('associates class_schedule with the correct class_id, not the user_id', async () => {
+        await db('users').insert({
+            name: 'Extra User',
+            avatar: 'https://example.com/extra.png',
+            whatsapp: '11988888888',
+            bio: 'Desync helper',
+        });
+
+        const res = await POST(postRequest(validClassPayload));
+        expect(res.status).toBe(201);
+
+        const lastClass = await db('classes').orderBy('id', 'desc').first();
+        const lastUser = await db('users').orderBy('id', 'desc').first();
+
+        expect(lastClass.id).not.toBe(lastUser.id);
+
+        const scheduleRows = await db('class_schedule').where({
+            class_id: lastClass.id,
+        });
+
+        expect(scheduleRows).toHaveLength(1);
+
+        const wrongScheduleRows = await db('class_schedule').where({
+            class_id: lastUser.id,
+        });
+
+        expect(wrongScheduleRows).toHaveLength(0);
+    });
 });
