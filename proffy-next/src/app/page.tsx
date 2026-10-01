@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import db from "@/server/db";
+
 import logoImg from "@/assets/images/logo.svg";
 import landingImg from "@/assets/images/landing.svg";
 
@@ -8,9 +10,11 @@ import studyIcon from "@/assets/images/icons/study.svg";
 import giveClassesIcon from "@/assets/images/icons/give-classes.svg";
 import purpleHeartIcon from "@/assets/images/icons/purple-heart.svg";
 
-const TOTAL_CONNECTIONS = 0;
+export const dynamic = "force-dynamic";
 
-export default function Landing() {
+export default async function Landing() {
+  const [{ total: totalConnections }] = await db("connections").count("* as total");
+
   return (
     <div className="flex h-screen w-full items-center justify-center bg-primary text-text-in-primary">
       <div
@@ -52,7 +56,7 @@ export default function Landing() {
         </div>
 
         <span className="landing-total flex items-center justify-center text-sm lg1100:justify-self-end">
-          total de {TOTAL_CONNECTIONS} conexões já realizadas
+          total de {totalConnections} conexões já realizadas
           <Image src={purpleHeartIcon} alt="coração roxo" className="ml-2" />
         </span>
       </div>
