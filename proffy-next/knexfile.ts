@@ -11,6 +11,13 @@ const config: Knex.Config = {
         extension: 'ts',
     },
     useNullAsDefault: true,
+    // better-sqlite3 enforces foreign keys by default; the legacy sqlite3 driver did not.
+    pool: {
+        afterCreate: (conn: { pragma: (sql: string) => void }, done: (err: Error | null, conn: unknown) => void) => {
+            conn.pragma('foreign_keys = OFF');
+            done(null, conn);
+        },
+    },
 };
 
 export default config;
