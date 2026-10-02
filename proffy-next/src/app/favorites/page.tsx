@@ -7,7 +7,13 @@ import TeacherItem, { Teacher } from "@/components/TeacherItem";
 import { getFavorites } from "@/utils/favorites";
 
 export default function Favorites() {
-  const [teachers] = useState<Teacher[]>(() => getFavorites());
+  const [teachers, setTeachers] = useState<Teacher[]>(() => getFavorites());
+
+  function handleToggleFavorite(teacher: Teacher, favorite: boolean) {
+    if (favorite) return;
+
+    setTeachers((current) => current.filter((item) => item.id !== teacher.id));
+  }
 
   return (
     <div className="h-screen w-screen">
@@ -21,7 +27,11 @@ export default function Favorites() {
         )}
 
         {teachers.map((teacher) => (
-          <TeacherItem key={teacher.id} teacher={teacher} />
+          <TeacherItem
+            key={teacher.id}
+            teacher={teacher}
+            onToggleFavorite={handleToggleFavorite}
+          />
         ))}
       </main>
     </div>

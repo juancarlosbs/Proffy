@@ -19,9 +19,10 @@ export interface Teacher {
 
 interface TeacherItemProps {
   teacher: Teacher;
+  onToggleFavorite?: (teacher: Teacher, favorite: boolean) => void;
 }
 
-export default function TeacherItem({ teacher }: TeacherItemProps) {
+export default function TeacherItem({ teacher, onToggleFavorite }: TeacherItemProps) {
   const [favorite, setFavorite] = useState(() => isFavorite(teacher.id));
 
   function createNewConnection() {
@@ -33,7 +34,9 @@ export default function TeacherItem({ teacher }: TeacherItemProps) {
   }
 
   function handleToggleFavorite() {
-    setFavorite(toggleFavorite(teacher));
+    const isNowFavorite = toggleFavorite(teacher);
+    setFavorite(isNowFavorite);
+    onToggleFavorite?.(teacher, isNowFavorite);
   }
 
   return (
