@@ -46,4 +46,51 @@ describe('Favorites page', () => {
 
         expect(screen.queryByText(teacher.name)).not.toBeInTheDocument();
     });
+
+    it('renders the favorite synchronously, before the backfill fetch resolves', () => {
+        const fetchMock = vi.fn(() => new Promise(() => {}));
+        vi.stubGlobal('fetch', fetchMock);
+
+        render(<Favorites />);
+
+        expect(screen.getByText(teacher.name)).toBeInTheDocument();
+        expect(fetchMock).toHaveBeenCalledWith(
+            expect.stringContaining(`/classes/schedule?user_id=${teacher.id}`)
+        );
+
+        vi.unstubAllGlobals();
+    });
+
+    it('backfills schedule for an old favorite and persists it to localStorage', async () => {
+        const schedule = [{ week_day: 1, from: '08:00', to: '12:00' }];
+        const fetchMock = vi.fn(() =>
+            Promise.resolve({
+                ok: true,
+                json: () => Promise.resolve(schedule),
+            })
+        );
+        vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+
+        render(<Favorites />);
+
+        await screen.findByText(/08:00 às 12:00/i);
+
+        const stored = JSON.parse(window.localStorage.getItem(STORAGE_KEY)!);
+        expect(stored[0].schedule).toEqual(schedule);
+
+        vi.unstubAllGlobals();
+    });
+
+    it('keeps rendering the card when the backfill fetch fails', async () => {
+        const fetchMock = vi.fn(() => Promise.resolve({ ok: false }));
+        vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+
+        render(<Favorites />);
+
+        await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+
+        expect(screen.getByText(teacher.name)).toBeInTheDocument();
+
+        vi.unstubAllGlobals();
+    });
 });

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import db from '@/server/db';
 import convertHourToMinutes from '@/server/utils/convertHourToMinutes';
+import convertMinutesToHour from '@/server/utils/convertMinutesToHour';
 
 interface ScheduleItem {
     week_day: number;
@@ -36,9 +37,34 @@ export async function GET(req: NextRequest) {
         })
         .where('classes.subject', '=', subject)
         .join('users', 'classes.user_id', '=', 'users.id')
-        .select(['classes.*', 'users.*']);
+        .select(['classes.*', 'users.*', 'classes.id as class_id']);
 
-    return NextResponse.json(classes);
+    const classIds = classes.map(klass => klass.class_id);
+
+    const scheduleRows = classIds.length
+        ? await db('class_schedule').whereIn('class_id', classIds)
+        : [];
+
+    const scheduleByClassId = new Map<number, ScheduleItem[]>();
+    for (const row of scheduleRows) {
+        const list = scheduleByClassId.get(row.class_id) ?? [];
+        list.push({
+            week_day: row.week_day,
+            from: convertMinutesToHour(row.from),
+            to: convertMinutesToHour(row.to),
+        });
+        scheduleByClassId.set(row.class_id, list);
+    }
+
+    const classesWithSchedule = classes.map(klass => {
+        const { class_id, ...rest } = klass;
+        return {
+            ...rest,
+            schedule: scheduleByClassId.get(class_id) ?? [],
+        };
+    });
+
+    return NextResponse.json(classesWithSchedule);
 }
 
 export async function POST(req: NextRequest) {
