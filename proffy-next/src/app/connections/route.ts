@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import db from '@/server/db';
+import { countConnections, createConnection } from '@/server/repositories/connections';
 
 export async function GET() {
-    const totalConnections = await db('connections').count('* as total');
-
-    const { total } = totalConnections[0];
+    const total = await countConnections();
 
     return NextResponse.json({ total });
 }
@@ -13,9 +11,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
     const { user_id } = await req.json();
 
-    await db('connections').insert({
-        user_id,
-    });
+    await createConnection(user_id);
 
     return new NextResponse(null, { status: 201 });
 }
