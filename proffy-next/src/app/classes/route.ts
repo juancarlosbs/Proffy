@@ -8,6 +8,7 @@ import {
 } from '@/server/classes';
 import convertHourToMinutes from '@/server/utils/convertHourToMinutes';
 import convertMinutesToHour from '@/server/utils/convertMinutesToHour';
+import { findRatingsSummaryByUserIds } from '@/server/ratings';
 
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -46,11 +47,21 @@ export async function GET(req: NextRequest) {
         scheduleByClassId.set(row.class_id, list);
     }
 
+    const ratingsSummary = await findRatingsSummaryByUserIds(
+        classes.map(klass => klass.id),
+    );
+    const ratingsByUserId = new Map(
+        ratingsSummary.map(summary => [summary.user_id, summary]),
+    );
+
     const classesWithSchedule = classes.map(klass => {
         const { class_id, ...rest } = klass;
+        const ratings = ratingsByUserId.get(klass.id);
         return {
             ...rest,
             schedule: scheduleByClassId.get(class_id) ?? [],
+            averageRating: ratings ? ratings.average : null,
+            ratingsCount: ratings ? ratings.count : 0,
         };
     });
 
