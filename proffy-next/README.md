@@ -57,6 +57,26 @@ O caminho do arquivo do banco pode ser customizado com a variável de ambiente `
 | `npm run db:migrate:rollback`  | Desfaz o último batch de migrations                                |
 | `npm test`                     | Roda os testes de contrato da API (Vitest)                        |
 
+## CI
+
+Todo pull request e todo push neste repositório dispara o workflow `proffy-next CI` no GitHub Actions (`.github/workflows/proffy-next-ci.yml`), que roda, nesta ordem, dentro de `proffy-next/`:
+
+1. `npm ci`
+2. `npm run lint`
+3. `npm run typecheck`
+4. `npm test`
+5. `npm run build`
+
+Se qualquer uma dessas etapas falhar, o workflow falha. Para rodar as mesmas verificações localmente:
+
+```bash
+cd proffy-next
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
 ## Estrutura de pastas
 
 ```
