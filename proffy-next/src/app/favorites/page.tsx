@@ -7,7 +7,7 @@ import TeacherItem, { Teacher } from "@/components/TeacherItem";
 import { getFavorites } from "@/utils/favorites";
 
 export default function Favorites() {
-  const [teachers] = useState<Teacher[]>(() => getFavorites());
+  const [teachers, setTeachers] = useState<Teacher[]>(() => getFavorites());
 
   return (
     <div className="h-screen w-screen">
@@ -21,7 +21,13 @@ export default function Favorites() {
         )}
 
         {teachers.map((teacher) => (
-          <TeacherItem key={teacher.id} teacher={teacher} />
+          <TeacherItem
+            key={teacher.id}
+            teacher={teacher}
+            onUnfavorite={(id) =>
+              setTeachers((prev) => prev.filter((item) => item.id !== id))
+            }
+          />
         ))}
       </main>
     </div>
