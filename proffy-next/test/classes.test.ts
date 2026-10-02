@@ -94,6 +94,49 @@ describe('GET /classes', () => {
         const body = await res.json();
         expect(body).toEqual([]);
     });
+
+    it('returns the schedule converted from minutes to HH:mm', async () => {
+        await POST(postRequest(validClassPayload));
+
+        const res = await GET(getRequest({ subject: 'Matemática', week_day: '1', time: '09:00' }));
+        const body = await res.json();
+
+        expect(body[0].schedule).toEqual([
+            { week_day: 1, from: '08:00', to: '12:00' },
+        ]);
+    });
+
+    it('returns multiple schedule entries for the same week_day', async () => {
+        await POST(postRequest({
+            ...validClassPayload,
+            schedule: [
+                { week_day: 1, from: '08:00', to: '10:00' },
+                { week_day: 1, from: '14:00', to: '18:00' },
+            ],
+        }));
+
+        const res = await GET(getRequest({ subject: 'Matemática', week_day: '1', time: '09:00' }));
+        const body = await res.json();
+
+        expect(body[0].schedule).toEqual([
+            { week_day: 1, from: '08:00', to: '10:00' },
+            { week_day: 1, from: '14:00', to: '18:00' },
+        ]);
+    });
+
+    it('characterization: returned id currently matches users.id, not classes.id', async () => {
+        await db('classes').insert({ subject: 'Dummy', cost: 1, user_id: 1 });
+        await POST(postRequest(validClassPayload));
+
+        const res = await GET(getRequest({ subject: 'Matemática', week_day: '1', time: '09:00' }));
+        const body = await res.json();
+
+        const [user] = await db('users').orderBy('id', 'desc').limit(1);
+        const [createdClass] = await db('classes').where({ subject: 'Matemática' }).orderBy('id', 'desc').limit(1);
+
+        expect(createdClass.id).not.toBe(user.id);
+        expect(body[0].id).toBe(user.id);
+    });
 });
 
 describe('POST /classes', () => {

@@ -36,6 +36,18 @@ export function removeFavorite(teacherId: number) {
   writeAll(readAll().filter((teacher) => teacher.id !== teacherId));
 }
 
+export function updateFavoriteSchedule(
+  teacherId: number,
+  schedule: Teacher["schedule"]
+) {
+  const favorites = readAll();
+  writeAll(
+    favorites.map((teacher) =>
+      teacher.id === teacherId ? { ...teacher, schedule } : teacher
+    )
+  );
+}
+
 export function toggleFavorite(teacher: Teacher): boolean {
   if (isFavorite(teacher.id)) {
     removeFavorite(teacher.id);

@@ -1,13 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import PageHeader from "@/components/PageHeader";
 import TeacherItem, { Teacher } from "@/components/TeacherItem";
-import { getFavorites } from "@/utils/favorites";
+import { getFavorites, updateFavoriteSchedule } from "@/utils/favorites";
 
 export default function Favorites() {
   const [teachers, setTeachers] = useState<Teacher[]>(() => getFavorites());
+
+  useEffect(() => {
+    const teachersMissingSchedule = teachers.filter(
+      (teacher) => teacher.schedule === undefined
+    );
+
+    teachersMissingSchedule.forEach(async (teacher) => {
+      try {
+        const res = await fetch(`/classes/schedule?user_id=${teacher.id}`);
+        if (!res.ok) return;
+
+        const schedule = await res.json();
+
+        setTeachers((prev) =>
+          prev.map((item) =>
+            item.id === teacher.id ? { ...item, schedule } : item
+          )
+        );
+        updateFavoriteSchedule(teacher.id, schedule);
+      } catch {
+        // backfill is best-effort; leave the card without schedule on failure
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="h-screen w-screen">

@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import PageHeader from "@/components/PageHeader";
 import TeacherItem, { Teacher } from "@/components/TeacherItem";
+import { WEEK_DAYS } from "@/utils/weekDays";
 
 const SUBJECTS = [
   "Artes",
@@ -17,16 +18,6 @@ const SUBJECTS = [
   "Matemática",
   "Português",
   "Quimica",
-];
-
-const WEEK_DAYS = [
-  { value: "0", label: "Domingo" },
-  { value: "1", label: "Segunda-feira" },
-  { value: "2", label: "Terça-feira" },
-  { value: "3", label: "Quarta-feira" },
-  { value: "4", label: "Quinta-feira" },
-  { value: "5", label: "Sexta-feira" },
-  { value: "6", label: "Sabado" },
 ];
 
 const fieldWrapperClasses = "relative mt-3.5 lg1100:mt-0";
