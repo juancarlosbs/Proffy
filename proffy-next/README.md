@@ -57,6 +57,29 @@ O caminho do arquivo do banco pode ser customizado com a variável de ambiente `
 | `npm run db:migrate:rollback`  | Desfaz o último batch de migrations                                |
 | `npm test`                     | Roda os testes de contrato da API (Vitest)                        |
 
+## CI
+
+Todo `push` e `pull_request` do repositório (qualquer branch) dispara o workflow `.github/workflows/proffy-next-ci.yml`, que roda em sequência, dentro de `proffy-next/`:
+
+1. `npm run lint`
+2. `npm run typecheck`
+3. `npm test`
+4. `npm run build`
+
+Uma falha em qualquer etapa marca o check como vermelho no PR/push. Para reproduzir localmente na mesma ordem:
+
+```bash
+cd proffy-next
+npm ci
+npm run lint
+npx next typegen   # gera next-env.d.ts, necessário para o typecheck (ver nota abaixo)
+npm run typecheck
+npm test
+npm run build
+```
+
+> `tsc --noEmit` depende de `next-env.d.ts`, um arquivo gerado pelo Next.js (não versionado) que declara os tipos de imports como `*.svg`. Em um checkout limpo esse arquivo ainda não existe; `npm run dev` ou `npm run build` também o geram, mas `npx next typegen` faz isso sem rodar um build completo.
+
 ## Estrutura de pastas
 
 ```
