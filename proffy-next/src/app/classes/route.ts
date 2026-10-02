@@ -6,6 +6,8 @@ import {
     findScheduleByClassIds,
     ScheduleItem,
 } from '@/server/classes';
+import { findRatingsByUserIds, RatingRow } from '@/server/ratings';
+import aggregateRatings from '@/server/utils/aggregateRatings';
 import convertHourToMinutes from '@/server/utils/convertHourToMinutes';
 import convertMinutesToHour from '@/server/utils/convertMinutesToHour';
 
@@ -46,11 +48,23 @@ export async function GET(req: NextRequest) {
         scheduleByClassId.set(row.class_id, list);
     }
 
+    const userIds = classes.map(klass => klass.id);
+
+    const ratingRows = await findRatingsByUserIds(userIds);
+
+    const ratingsByUserId = new Map<number, RatingRow[]>();
+    for (const row of ratingRows) {
+        const list = ratingsByUserId.get(row.user_id) ?? [];
+        list.push(row);
+        ratingsByUserId.set(row.user_id, list);
+    }
+
     const classesWithSchedule = classes.map(klass => {
         const { class_id, ...rest } = klass;
         return {
             ...rest,
             schedule: scheduleByClassId.get(class_id) ?? [],
+            ...aggregateRatings(ratingsByUserId.get(klass.id) ?? []),
         };
     });
 

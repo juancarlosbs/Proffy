@@ -4,7 +4,11 @@ import { useEffect, useState } from "react";
 
 import PageHeader from "@/components/PageHeader";
 import TeacherItem, { Teacher } from "@/components/TeacherItem";
-import { getFavorites, updateFavoriteSchedule } from "@/utils/favorites";
+import {
+  getFavorites,
+  updateFavoriteRatings,
+  updateFavoriteSchedule,
+} from "@/utils/favorites";
 
 export default function Favorites() {
   const [teachers, setTeachers] = useState<Teacher[]>(() => getFavorites());
@@ -29,6 +33,24 @@ export default function Favorites() {
         updateFavoriteSchedule(teacher.id, schedule);
       } catch {
         // backfill is best-effort; leave the card without schedule on failure
+      }
+    });
+
+    teachers.forEach(async (teacher) => {
+      try {
+        const res = await fetch(`/teachers/ratings?user_id=${teacher.id}`);
+        if (!res.ok) return;
+
+        const ratings = await res.json();
+
+        setTeachers((prev) =>
+          prev.map((item) =>
+            item.id === teacher.id ? { ...item, ...ratings } : item
+          )
+        );
+        updateFavoriteRatings(teacher.id, ratings);
+      } catch {
+        // backfill is best-effort; leave the card without ratings on failure
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

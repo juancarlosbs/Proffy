@@ -7,7 +7,7 @@ const config: Knex.Config = {
         filename: process.env.PROFFY_DB_FILE ?? path.resolve(process.cwd(), 'src', 'server', 'database', 'database.sqlite'),
     },
     migrations: {
-        directory: path.resolve(__dirname, 'src', 'server', 'database', 'migrations'),
+        directory: path.resolve(process.cwd(), 'src', 'server', 'database', 'migrations'),
         extension: 'ts',
     },
     useNullAsDefault: true,

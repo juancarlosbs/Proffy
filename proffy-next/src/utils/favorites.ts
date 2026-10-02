@@ -48,6 +48,18 @@ export function updateFavoriteSchedule(
   );
 }
 
+export function updateFavoriteRatings(
+  teacherId: number,
+  ratings: Pick<Teacher, "avg_rating" | "ratings_count" | "ratings">
+) {
+  const favorites = readAll();
+  writeAll(
+    favorites.map((teacher) =>
+      teacher.id === teacherId ? { ...teacher, ...ratings } : teacher
+    )
+  );
+}
+
 export function toggleFavorite(teacher: Teacher): boolean {
   if (isFavorite(teacher.id)) {
     removeFavorite(teacher.id);
