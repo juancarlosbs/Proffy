@@ -1,0 +1,37 @@
+name: proffy-next CI
+
+on:
+  pull_request: {}
+  push: {}
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: proffy-next/package-lock.json
+
+      - name: Install dependencies
+        working-directory: proffy-next
+        run: npm ci
+
+      - name: Lint
+        working-directory: proffy-next
+        run: npm run lint
+
+      - name: Typecheck
+        working-directory: proffy-next
+        run: npm run typecheck
+
+      - name: Test
+        working-directory: proffy-next
+        run: npm test
+
+      - name: Build
+        working-directory: proffy-next
+        run: npm run build
