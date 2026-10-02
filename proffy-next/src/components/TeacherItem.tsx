@@ -6,6 +6,13 @@ import Image from "next/image";
 import whatsappIcon from "@/assets/images/icons/whatsapp.svg";
 import purpleHeartIcon from "@/assets/images/icons/purple-heart.svg";
 import { isFavorite, toggleFavorite } from "@/utils/favorites";
+import { getWeekDayLabel } from "@/utils/weekDays";
+
+export interface ScheduleItem {
+  week_day: number;
+  from: string;
+  to: string;
+}
 
 export interface Teacher {
   id: number;
@@ -15,6 +22,7 @@ export interface Teacher {
   name: string;
   subject: string;
   whatsapp: string;
+  schedule?: ScheduleItem[];
 }
 
 interface TeacherItemProps {
@@ -79,6 +87,18 @@ export default function TeacherItem({ teacher, onUnfavorite }: TeacherItemProps)
       </header>
 
       <p className="px-8 text-base leading-7">{teacher.bio}</p>
+
+      {teacher.schedule && teacher.schedule.length > 0 && (
+        <ul className="mt-4 px-8 text-base leading-7">
+          {[...teacher.schedule]
+            .sort((a, b) => a.week_day - b.week_day)
+            .map((item, index) => (
+              <li key={`${item.week_day}-${item.from}-${item.to}-${index}`}>
+                {getWeekDayLabel(item.week_day)}: das {item.from} às {item.to}
+              </li>
+            ))}
+        </ul>
+      )}
 
       <footer className="mt-8 flex items-center justify-between border-t border-line-in-white bg-box-footer p-8">
         <p className="text-base">

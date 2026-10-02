@@ -32,6 +32,15 @@ export function addFavorite(teacher: Teacher) {
   writeAll([...favorites, teacher]);
 }
 
+export function updateFavorite(teacher: Teacher) {
+  const favorites = readAll();
+  if (!favorites.some((item) => item.id === teacher.id)) return;
+
+  writeAll(
+    favorites.map((item) => (item.id === teacher.id ? teacher : item)),
+  );
+}
+
 export function removeFavorite(teacherId: number) {
   writeAll(readAll().filter((teacher) => teacher.id !== teacherId));
 }

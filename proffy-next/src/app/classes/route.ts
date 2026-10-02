@@ -2,11 +2,40 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import db from '@/server/db';
 import convertHourToMinutes from '@/server/utils/convertHourToMinutes';
+import convertMinutesToHour from '@/server/utils/convertMinutesToHour';
 
 interface ScheduleItem {
     week_day: number;
     from: string;
     to: string;
+}
+
+interface ClassScheduleRow {
+    class_id: number;
+    week_day: number;
+    from: number;
+    to: number;
+}
+
+export async function attachSchedule<T extends { id: number }>(classes: T[]) {
+    if (classes.length === 0) return classes.map((item) => ({ ...item, schedule: [] }));
+
+    const classIds = classes.map((item) => item.id);
+
+    const scheduleRows: ClassScheduleRow[] = await db('class_schedule')
+        .whereIn('class_id', classIds)
+        .select(['class_id', 'week_day', 'from', 'to']);
+
+    return classes.map((item) => ({
+        ...item,
+        schedule: scheduleRows
+            .filter((row) => row.class_id === item.id)
+            .map((row) => ({
+                week_day: row.week_day,
+                from: convertMinutesToHour(row.from),
+                to: convertMinutesToHour(row.to),
+            })),
+    }));
 }
 
 export async function GET(req: NextRequest) {
@@ -38,7 +67,9 @@ export async function GET(req: NextRequest) {
         .join('users', 'classes.user_id', '=', 'users.id')
         .select(['classes.*', 'users.*']);
 
-    return NextResponse.json(classes);
+    const classesWithSchedule = await attachSchedule(classes);
+
+    return NextResponse.json(classesWithSchedule);
 }
 
 export async function POST(req: NextRequest) {
