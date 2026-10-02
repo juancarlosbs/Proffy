@@ -45,3 +45,20 @@ export function toggleFavorite(teacher: Teacher): boolean {
   addFavorite(teacher);
   return true;
 }
+
+export function updateFavoritesSchedule(
+  teachersWithSchedule: Pick<Teacher, "id" | "schedule">[],
+): Teacher[] {
+  const favorites = readAll();
+
+  const updated = favorites.map((favorite) => {
+    const match = teachersWithSchedule.find(
+      (teacher) => teacher.id === favorite.id,
+    );
+
+    return match ? { ...favorite, schedule: match.schedule } : favorite;
+  });
+
+  writeAll(updated);
+  return updated;
+}

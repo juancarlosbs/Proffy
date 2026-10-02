@@ -1,13 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import PageHeader from "@/components/PageHeader";
 import TeacherItem, { Teacher } from "@/components/TeacherItem";
-import { getFavorites } from "@/utils/favorites";
+import { getFavorites, updateFavoritesSchedule } from "@/utils/favorites";
 
 export default function Favorites() {
   const [teachers, setTeachers] = useState<Teacher[]>(() => getFavorites());
+
+  useEffect(() => {
+    const idsMissingSchedule = teachers
+      .filter((teacher) => !teacher.schedule)
+      .map((teacher) => teacher.id);
+
+    if (idsMissingSchedule.length === 0) return;
+
+    fetch(`/classes?ids=${idsMissingSchedule.join(",")}`)
+      .then((response) => response.json())
+      .then((classesWithSchedule: Teacher[]) => {
+        const updated = updateFavoritesSchedule(classesWithSchedule);
+        setTeachers(updated);
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="h-screen w-screen">

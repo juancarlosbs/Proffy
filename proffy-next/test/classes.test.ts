@@ -94,6 +94,45 @@ describe('GET /classes', () => {
         const body = await res.json();
         expect(body).toEqual([]);
     });
+
+    it('includes the class schedule in the response, matched by class id even when it differs from the user id', async () => {
+        // Insert a class row directly so the class created below gets an id different from its user's id.
+        await db('classes').insert({ subject: 'Dummy', cost: 1, user_id: 1 });
+        await POST(postRequest(validClassPayload));
+
+        const res = await GET(getRequest({ subject: 'Matemática', week_day: '1', time: '09:00' }));
+
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body).toHaveLength(1);
+        expect(body[0].id).not.toBe(undefined);
+        expect(body[0].schedule).toEqual([
+            { week_day: 1, from: 480, to: 720 },
+        ]);
+    });
+
+    it('returns classes by ids (user ids) with their schedule, ignoring subject/week_day/time filters', async () => {
+        await POST(postRequest(validClassPayload));
+        const [user] = await db('users').orderBy('id', 'desc').limit(1);
+
+        const res = await GET(getRequest({ ids: String(user.id) }));
+
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body).toHaveLength(1);
+        expect(body[0]).toMatchObject({ id: user.id, name: 'Alan Turing' });
+        expect(body[0].schedule).toEqual([
+            { week_day: 1, from: 480, to: 720 },
+        ]);
+    });
+
+    it('returns an empty list for ids with no matching class', async () => {
+        const res = await GET(getRequest({ ids: '999999' }));
+
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body).toEqual([]);
+    });
 });
 
 describe('POST /classes', () => {

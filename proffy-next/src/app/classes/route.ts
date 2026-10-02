@@ -9,8 +9,44 @@ interface ScheduleItem {
     to: string;
 }
 
+async function attachSchedule(classes: Array<{ class_id: number } & Record<string, unknown>>) {
+    const classIds = classes.map((classItem) => classItem.class_id);
+
+    const schedules = await db('class_schedule').whereIn(
+        'class_id',
+        classIds,
+    );
+
+    return classes.map(({ class_id, ...classItem }) => ({
+        ...classItem,
+        schedule: schedules
+            .filter((scheduleItem) => scheduleItem.class_id === class_id)
+            .map((scheduleItem) => ({
+                week_day: scheduleItem.week_day,
+                from: scheduleItem.from,
+                to: scheduleItem.to,
+            })),
+    }));
+}
+
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
+
+    const ids = searchParams.get('ids');
+
+    if (ids) {
+        const classIds = ids
+            .split(',')
+            .map((id) => Number(id))
+            .filter((id) => !Number.isNaN(id));
+
+        const classes = await db('classes')
+            .whereIn('users.id', classIds)
+            .join('users', 'classes.user_id', '=', 'users.id')
+            .select(['classes.*', 'users.*', 'classes.id as class_id']);
+
+        return NextResponse.json(await attachSchedule(classes));
+    }
 
     const subject = searchParams.get('subject');
     const week_day = searchParams.get('week_day');
@@ -36,9 +72,9 @@ export async function GET(req: NextRequest) {
         })
         .where('classes.subject', '=', subject)
         .join('users', 'classes.user_id', '=', 'users.id')
-        .select(['classes.*', 'users.*']);
+        .select(['classes.*', 'users.*', 'classes.id as class_id']);
 
-    return NextResponse.json(classes);
+    return NextResponse.json(await attachSchedule(classes));
 }
 
 export async function POST(req: NextRequest) {

@@ -6,6 +6,13 @@ import Image from "next/image";
 import whatsappIcon from "@/assets/images/icons/whatsapp.svg";
 import purpleHeartIcon from "@/assets/images/icons/purple-heart.svg";
 import { isFavorite, toggleFavorite } from "@/utils/favorites";
+import { WEEK_DAY_LABELS } from "@/utils/weekDays";
+
+export interface ScheduleItem {
+  week_day: number;
+  from: number;
+  to: number;
+}
 
 export interface Teacher {
   id: number;
@@ -15,6 +22,14 @@ export interface Teacher {
   name: string;
   subject: string;
   whatsapp: string;
+  schedule?: ScheduleItem[];
+}
+
+function formatMinutesToHour(minutes: number) {
+  const hour = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  return `${String(hour).padStart(2, "0")}:${String(remainingMinutes).padStart(2, "0")}`;
 }
 
 interface TeacherItemProps {
@@ -79,6 +94,20 @@ export default function TeacherItem({ teacher, onUnfavorite }: TeacherItemProps)
       </header>
 
       <p className="px-8 text-base leading-7">{teacher.bio}</p>
+
+      {!!teacher.schedule?.length && (
+        <ul className="mt-6 px-8 text-base leading-7">
+          {teacher.schedule.map((scheduleItem, index) => (
+            <li key={index}>
+              {WEEK_DAY_LABELS[scheduleItem.week_day]}:{" "}
+              <strong className="font-archivo font-bold text-text-title">
+                {formatMinutesToHour(scheduleItem.from)} às{" "}
+                {formatMinutesToHour(scheduleItem.to)}
+              </strong>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <footer className="mt-8 flex items-center justify-between border-t border-line-in-white bg-box-footer p-8">
         <p className="text-base">
