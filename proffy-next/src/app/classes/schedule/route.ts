@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-import db from '@/server/db';
+import {
+    findClassByUserId,
+    findScheduleByClassId,
+} from '@/server/repositories/classesRepository';
 import convertMinutesToHour from '@/server/utils/convertMinutesToHour';
 
 export async function GET(req: NextRequest) {
@@ -15,13 +18,13 @@ export async function GET(req: NextRequest) {
         );
     }
 
-    const klass = await db('classes').where('user_id', user_id).first();
+    const klass = await findClassByUserId(user_id);
 
     if (!klass) {
         return NextResponse.json([]);
     }
 
-    const scheduleRows = await db('class_schedule').where('class_id', klass.id);
+    const scheduleRows = await findScheduleByClassId(klass.id);
 
     const schedule = scheduleRows.map(row => ({
         week_day: row.week_day,
